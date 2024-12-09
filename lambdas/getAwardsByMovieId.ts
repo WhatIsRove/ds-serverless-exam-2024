@@ -16,6 +16,11 @@ type ResponseBody = {
     };
 };
 
+const ajv = new Ajv({ coerceTypes: true });
+const isValidQueryParams = ajv.compile(
+  schema.definitions["AwardQueryParams"] || {}
+);
+
 const ddbDocClient = createDDbDocClient();
 
 export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
@@ -26,6 +31,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
         const movieId = parameters?.movieId
             ? parseInt(parameters.movieId)
             : undefined;
+
 
         if (!awardBody) {
             return {
@@ -54,18 +60,50 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
         let queryCommandInput: QueryCommandInput = {
             TableName: process.env.AWARDS_TABLE_NAME,
         };
-        queryCommandInput = {
-            ...queryCommandInput,
-            KeyConditionExpression: "movieId = :m and awardBody = :a",
-            ExpressionAttributeValues: {
-                ":m": movieId,
-                ":a": awardBody
-            },
-        };
-        const queryCommandOutput = await ddbDocClient.send(
-            new QueryCommand(queryCommandInput)
-        );
-        body.data.awards = queryCommandOutput.Items as MovieAward[];
+        const queryParams = event.queryStringParameters;
+        const min = queryParams?.min ? parseInt(queryParams.min) : undefined;
+
+        
+        if (isValidQueryParams(queryParams)) {
+            if (!min) {
+                return {
+                    statusCode: 404,
+                    headers: {
+                        "content-type": "application/json",
+                    },
+                    body: JSON.stringify({ Message: "Missing missing min" }),
+                };
+            }
+            queryCommandInput = {
+                ...queryCommandInput,
+                KeyConditionExpression: "movieId = :m and awardBody = :a",
+                ExpressionAttributeValues: {
+                    ":m": movieId,
+                    ":a": awardBody
+                },
+            };
+            const queryCommandOutput = await ddbDocClient.send(
+                new QueryCommand(queryCommandInput)
+            );
+            body.data.awards = queryCommandOutput.Items as MovieAward[];
+            if (body.data.awards.length < min) {
+                body.data.awards = [];
+            }
+        } else {
+            queryCommandInput = {
+                ...queryCommandInput,
+                KeyConditionExpression: "movieId = :m and awardBody = :a",
+                ExpressionAttributeValues: {
+                    ":m": movieId,
+                    ":a": awardBody
+                },
+            };
+            const queryCommandOutput = await ddbDocClient.send(
+                new QueryCommand(queryCommandInput)
+            );
+            body.data.awards = queryCommandOutput.Items as MovieAward[];
+        }
+        
 
         // Return Response
         return {
