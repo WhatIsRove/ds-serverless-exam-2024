@@ -29,6 +29,10 @@ export type Movie = {
     cast?: boolean;
   }
 
+  export type AwardQueryParams = {
+    min?: number;
+  }
+
   export type MovieAward = {
     movieId: number;
     awardBody: string;
