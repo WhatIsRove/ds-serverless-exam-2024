@@ -12,7 +12,7 @@ You are required to take the following steps in preparation for this exam:
 $ npm install
 $ npm run schema
 ~~~
-+ Create a new repository in your GitHub account called 'edaExam'.
++ Create a new repository in your GitHub account called 'serverlessExam'.
 + In VS Code, type the following commands:
 ~~~bash
 $ git remote remove origin
@@ -24,8 +24,11 @@ $ git push origin master
 
 Deploy the app to your AWS account (cdk deploy).
 
-The app is very similar to one of the demo apps discussed in the lectures that illustrated the SQS service. The architecture has been slightly changed. A lambda function generates test data (Orders) and publishes them to an SNS topic. The topic has an SQS subscriber, which, in turn, has a lambda consumer. 
+The app resembles the REST web API you developed in the labs. Two new DynamoDB tables are included:
 
-Examine all aspects of the stack and the lambda functions. __Do not change the code.__
+1. Movie Awards - Stores information about awards won by a movie, e.g. Oscars, Golden Globe, etc
+1. Movie Crew - Stores data about the crew associated with a movie, e.g. director, cameras, producer, etc
+
+Examine all aspects of the code related to these tables, e.g. seeding, types, etc. Also, examine the REST API stack code and the lambda functions. __Do not change the code.__
 
 When you have fully understood the app, you may destroy the stack. However, redeploy the app again the day before the exam and leave it deployed. 
